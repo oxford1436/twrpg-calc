@@ -180,6 +180,15 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
       </div>
     </div>
   </div>
+  <div style="margin-top:1.1rem">
+    <div class="ctl-label">드랍 아이콘 (개인 드랍 보스 전용)</div>
+    <div class="boss-row" id="iconRow" style="margin-bottom:0">
+      <button class="boss-btn icon-btn" data-icon="none">없음<small>보너스 없음</small></button>
+      <button class="boss-btn icon-btn" data-icon="gm">그랜드마스터<small>하위 등급만</small></button>
+      <button class="boss-btn icon-btn" data-icon="legend">레전드<small>하위 등급만</small></button>
+      <button class="boss-btn icon-btn" data-icon="immortal">불멸자<small>라자루스~마도기계 ×1.5</small></button>
+    </div>
+  </div>
   <div class="sac-note" id="sacNote" style="max-width:none;margin-top:.6rem">개인 희생 1명당 지목받은 사람의 배율 +0.8 · 전체 희생은 1명당 +0.8을 비희생 인원 전원이 나눠 가짐 (상한 3.0). 희생자는 일반 드랍 자격을 잃습니다.</div>
   <div style="display:none">
   </div>
@@ -254,6 +263,15 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
       <p>희생은 두 종류입니다. <b>개인 희생</b>: 나를 직접 지목한 1명당 내 배율(CUj) +0.8 (상한 3.0 — 3명이면 캡). <b>전체 희생</b>: 희생자 1명당 +0.8의 몫이 파티의 비희생 인원 전원에게 <b>분배</b>됩니다 (예: 6인방 전체 희생 1명 → 나머지 5명이 +0.16씩). 특정인을 밀어주려면 개인 희생이 압도적으로 효율적입니다. 어느 쪽이든 희생자 본인은 그 보스의 일반 드랍 자격을 잃습니다.</p>
       <p>또한 파티가 소수면 빈자리가 자동 보정으로 계산됩니다: 라자루스·가이아는 1인 3.0 / 2인 1.8 / 3인 1.27, 마도기계는 1인 2.6 / 2인 1.4 (기준 인원이 4라서). 4인 이상부터는 1.0입니다.</p>
       <p>이 배율은 소원과 <b>곱연산으로 중첩</b>되고, 확정형 아이템에는 적용되지 않습니다.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>드랍 아이콘 (불멸자 아이콘)</summary>
+    <div class="d-body">
+      <p><b>불멸자 아이콘</b>을 장착하면 "고대 마도 기계까지"의 보스 — 이 계산기 기준 <b>라자루스 · 지신 가이아 · 고대 마도기계</b> — 의 개인 드랍률이 <b>×1.5</b> 됩니다. 인원 보너스·희생·소원과 전부 곱연산으로 중첩되며, 계산기에서는 영혼석·토큰에도 적용해 계산합니다.</p>
+      <p><b>스티릭스·카마엘에는 적용되지 않습니다</b> — 공용 드랍은 개인 판정 자체를 거치지 않기 때문입니다. 그랜드마스터·레전드 아이콘의 드랍 보너스는 하위 등급(델티라마~알테이아) 아이템 대상이라, 이 5보스의 아르카나급 드랍에는 효과가 없어 계산기에서는 "없음"과 동일하게 처리됩니다.</p>
+      <p>같은 계정의 모든 캐릭터와 공유되므로, 본계정에 하나만 있으면 됩니다.</p>
     </div>
   </details>
 
@@ -361,9 +379,14 @@ const BOSSES = [
 ];
 
 // ── 상태 ─────────────────────────────────────────────
-let state = { boss:'arc', n:6, sac:0, sacAll:0, matrixWish:false };  // 보스 전환 시 defaultN 적용
+let state = { boss:'arc', n:6, sac:0, sacAll:0, matrixWish:false, icon:'immortal' };  // 보스 전환 시 defaultN 적용
 
 // ── 계산 ─────────────────────────────────────────────
+// 불멸자 아이콘: 라자루스·가이아·마도기계(개인 드랍 3종)에 ×1.5
+// 그랜드마스터/레전드는 하위 등급 아이템 대상이라 이 5보스(아르카나급)에는 미적용
+function iconMult(bossId){
+  return (state.icon === 'immortal' && ['laz','gaia','arc'].includes(bossId)) ? 1.5 : 1.0;
+}
 function calc(){
   const b = BOSSES.find(x => x.id === state.boss);
   const maxN = b.maxN || 10;
@@ -378,18 +401,19 @@ function calc(){
     const undesignated = Math.max(1, state.n - state.sac - state.sacAll); // 희생 안 한 인원
     cuj = Math.min(3, Math.max(1, 1 + 0.8 * state.sac + 0.8 * pool / undesignated));
   }
+  const im = iconMult(b.id);
   const rows = b.items.map(it => {
     const base = it.w / 100;                 // 가중치 = %
     if (it.kind === 'fixed'){
-      const p = base * (1 + bonus);
+      const p = base * (1 + bonus) * (b.type === 'personal' ? im : 1);
       return {...it, noWish:p, wish:p, wishSame:true};
     }
     if (b.type === 'communal'){
       const p = base * (1 + bonus);
       return {...it, noWish:p, wish:null};
     }
-    const pNo = base * (1 + bonus) * cuj * 1.15 / b.nI;
-    const pW  = base * (1 + bonus) * cuj;
+    const pNo = base * (1 + bonus) * cuj * im * 1.15 / b.nI;
+    const pW  = base * (1 + bonus) * cuj * im;
     return {...it, noWish:pNo, wish:pW};
   });
   // "아무거나 1개" (일반템 기준)
@@ -409,9 +433,15 @@ function render(){
   const personal = b.type === 'personal';
 
   // 보스 버튼
-  document.querySelectorAll('.boss-btn').forEach(btn => {
+  document.querySelectorAll('.boss-btn:not(.icon-btn)').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.id === state.boss);
     btn.setAttribute('aria-selected', btn.dataset.id === state.boss);
+  });
+  const iconActive = iconMult(b.id) > 1;
+  document.querySelectorAll('.icon-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.icon === state.icon);
+    btn.disabled = !personal;
+    btn.style.opacity = personal ? 1 : .35;
   });
   document.getElementById('nVal').textContent = state.n + (b.maxN ? ' / ' + b.maxN : '');
   document.getElementById('sVal').textContent = state.sac;
@@ -425,7 +455,8 @@ function render(){
 
   document.getElementById('resTitle').textContent = b.name + ' · ' + state.n + '인';
   document.getElementById('modeTag').textContent = b.tag + ' · 인원 보너스 +' + Math.round(bonus*1000)/10 + '%'
-    + (personal ? ' · 개인 배율 ×' + cuj.toFixed(2) : '');
+    + (personal ? ' · 개인 배율 ×' + cuj.toFixed(2) : '')
+    + (iconMult(b.id) > 1 ? ' · 아이콘 ×1.5' : '');
 
   document.getElementById('resHead').innerHTML = personal
     ? '<tr><th>아이템</th><th>소원 안 함</th><th>기대 처치</th><th>소원 시</th><th>기대 처치</th></tr>'
@@ -488,6 +519,7 @@ function render(){
       term(ex.w, '기본 가중치(%)') + op('×') +
       term('1+' + Math.round(bonus*1000)/10 + '%', '인원 보너스', 'hl') + op('×') +
       term('×' + cuj.toFixed(2), '개인 배율 CUj', 'hl') + op('×') +
+      (iconMult(b.id) > 1 ? term('×1.5', '불멸자 아이콘', 'hl') + op('×') : '') +
       term('1.15÷' + b.nI, '무소원 분산', '') +
       '<span class="op eq">=</span><span class="term"><span class="v">' + fmtP(ex.noWish) + '</span><span class="l">' + ex.name + ' · 소원 안 함</span></span>' +
       '<span class="op">|</span>' +
@@ -505,12 +537,13 @@ function render(){
 function probAt(b, item, n, wish){
   const bonus = profiles[b.profile](n);
   const base = item.w / 100;
-  if (item.kind === 'fixed') return base * (1 + bonus);
+  const im = b.type === 'personal' ? iconMult(b.id) : 1;
+  if (item.kind === 'fixed') return base * (1 + bonus) * im;
   if (b.type === 'communal') return wish ? null : base * (1 + bonus);
   const emptySeats = Math.max(0, (b.h6 - 1) - n);   // 희생 0 기준
   const cuj = Math.min(3, Math.max(1, 1 + 0.8 * emptySeats / Math.max(n,1)));
-  return wish ? base * (1 + bonus) * cuj
-              : base * (1 + bonus) * cuj * 1.15 / b.nI;
+  return wish ? base * (1 + bonus) * cuj * im
+              : base * (1 + bonus) * cuj * im * 1.15 / b.nI;
 }
 function renderMatrix(){
   const b = BOSSES.find(x => x.id === state.boss);
@@ -538,7 +571,7 @@ function renderMatrix(){
   html += '</tbody>';
   tbl.innerHTML = html;
   document.getElementById('matrixNote').textContent = b.type === 'personal'
-    ? (wish ? '소원 시 · 1인 기준 · 희생 0명 기준. 소원 대상 외 일반템은 0%가 됩니다 (확정형은 소원 무관 값).'
+    ? (wish ? '소원 시 · 1인 기준 · 희생 0명 기준 · 선택한 아이콘 반영. 소원 대상 외 일반템은 0%가 됩니다 (확정형은 소원 무관 값).'
             : '소원 안 함 · 1인 기준 · 희생 0명 기준. 1~' + Math.max(0,(b.h6-2)) + '인 구간의 상승은 소수 인원 자동 보정입니다.')
     : '파티 전체 기준 · 처치 1회당. 이 보스는 소원이 없으며 인원 집계는 게임 내 레벨 100 이상 전체 플레이어 수입니다.';
 }
@@ -563,6 +596,9 @@ document.getElementById('sPlus').onclick  = () => { state.sac = Math.min(state.n
 document.getElementById('aMinus').onclick = () => { state.sacAll = Math.max(0, state.sacAll - 1); render(); };
 document.getElementById('aPlus').onclick  = () => { state.sacAll = Math.min(state.n - 1, state.sacAll + 1); render(); };
 
+document.querySelectorAll('.icon-btn').forEach(btn => {
+  btn.onclick = () => { state.icon = btn.dataset.icon; render(); };
+});
 document.getElementById('mNoWish').onclick = () => { state.matrixWish = false; renderMatrix(); };
 document.getElementById('mWish').onclick   = () => { state.matrixWish = true; renderMatrix(); };
 
