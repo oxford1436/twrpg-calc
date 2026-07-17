@@ -181,10 +181,9 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
     </div>
   </div>
   <div style="margin-top:1.1rem">
-    <div class="ctl-label">드랍 아이콘 (라자루스·가이아·마도기계 개인 드랍에 적용)</div>
+    <div class="ctl-label">불멸자 아이콘 (라자루스·가이아·마도기계 개인 드랍 ×1.5)</div>
     <div class="boss-row" id="iconRow" style="margin-bottom:0">
-      <button class="boss-btn icon-btn" data-icon="immortal">불멸자<small>모든 아이템 ×1.5</small></button>
-      <button class="boss-btn icon-btn" data-icon="legend">그마/레전드<small>장비 아이템만 ×1.5</small></button>
+      <button class="boss-btn icon-btn" data-icon="immortal">장착<small>드랍률 ×1.5 적용</small></button>
       <button class="boss-btn icon-btn" data-icon="none">미장착<small>보너스 없음</small></button>
     </div>
   </div>
@@ -266,12 +265,11 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
   </details>
 
   <details>
-    <summary>드랍 아이콘 — 불멸자 vs 그마/레전드</summary>
+    <summary>드랍 아이콘 (불멸자 아이콘)</summary>
     <div class="d-body">
-      <p>드랍 판정 코드는 장착 중인 아이콘이 <b>그랜드마스터 / 레전드 / 불멸자</b> 셋 중 하나인지만 검사합니다 (그 외 아이콘은 드랍에 무영향). 효과는 두 갈래입니다:</p>
-      <p><b>① 장비 조항 (숨은 혜택)</b> — 세 아이콘 중 아무거나 장착하면, 개인 드랍 보스의 <b>장비 아이템</b>(핏빛 장미·생명의 가운·진실의 가면)은 등급 무관 <b>×1.5</b>. 툴팁에 안 적혀 있지만 코드에 존재합니다.</p>
-      <p><b>② 보스 조항 (불멸자 전용)</b> — 불멸자 아이콘은 추가로 "라자루스·가이아·마도기계의 <b>모든 아이템</b>(재료·영혼석·토큰 포함)"에 ×1.5. 툴팁의 "고대 마도 기계까지 개인 드랍률 50% 증가"가 이것입니다.</p>
-      <p>재료는 등급이 아르카나(8)라 그마/레전드의 등급 범위(델티라마~알테이아 = 4~7)에 안 들어가 재료 보너스가 없습니다. 인원 보너스·희생·소원과는 전부 곱연산 중첩이며, <b>스티릭스·카마엘(공용 드랍)에는 어떤 아이콘도 무효</b>입니다.</p>
+      <p><b>불멸자 아이콘</b>을 장착하면 "고대 마도 기계까지"의 보스 — 이 계산기 기준 <b>라자루스 · 지신 가이아 · 고대 마도기계</b> — 의 개인 드랍률이 <b>×1.5</b> 됩니다. 인원 보너스·희생·소원과 곱연산으로 중첩됩니다.</p>
+      <p><b>스티릭스·카마엘에는 적용되지 않습니다</b> — 공용 드랍은 개인 판정 자체를 거치지 않기 때문입니다. 그랜드마스터·레전드 아이콘의 드랍 보너스는 하위 등급 아이템 대상이라 이 5보스 계산에는 반영하지 않습니다.</p>
+      <p>같은 계정의 모든 캐릭터와 공유되므로, 본계정에 하나만 있으면 됩니다.</p>
     </div>
   </details>
 
@@ -382,16 +380,10 @@ const BOSSES = [
 let state = { boss:'arc', n:6, sac:0, sacAll:0, matrixWish:false, icon:'immortal' };  // 보스 전환 시 defaultN 적용
 
 // ── 계산 ─────────────────────────────────────────────
-// 아이콘 ×1.5 판정 (코드 H0Z 154736~154751행 역해석):
-//  - 불멸자: 라자루스·가이아·마도기계의 모든 아이템 (보스 리스트 하드코딩 조항)
-//  - 그마/레전드: 장비 부위(분류 1~5) 아이템만 — 등급 무관 (FUn 조항)
-//    ※ 재료·영혼석은 등급 8(아르카나)이라 등급 범위(4~7) 조항 미충족
-//  - 공용 드랍(스티릭스·카마엘)은 개인 판정이 없어 아이콘 자체가 무효
+// 불멸자 아이콘: 라자루스·가이아·마도기계(개인 드랍)의 아이템 ×1.5
+// 공용 드랍(스티릭스·카마엘)은 개인 판정이 없어 아이콘 무효
 function iconMultFor(bossId, kind){
-  if (!['laz','gaia','arc'].includes(bossId)) return 1.0;
-  if (state.icon === 'immortal') return 1.5;
-  if (state.icon === 'legend' && kind === 'equip') return 1.5;
-  return 1.0;
+  return (state.icon === 'immortal' && ['laz','gaia','arc'].includes(bossId)) ? 1.5 : 1.0;
 }
 function calc(){
   const b = BOSSES.find(x => x.id === state.boss);
@@ -462,8 +454,7 @@ function render(){
   document.getElementById('resTitle').textContent = b.name + ' · ' + state.n + '인';
   document.getElementById('modeTag').textContent = b.tag + ' · 인원 보너스 +' + Math.round(bonus*1000)/10 + '%'
     + (personal ? ' · 개인 배율 ×' + cuj.toFixed(2) : '')
-    + (iconMultFor(b.id,'normal') > 1 ? ' · 아이콘 전체 ×1.5'
-       : (iconMultFor(b.id,'equip') > 1 ? ' · 아이콘 장비 ×1.5' : ''));
+    + (iconMultFor(b.id,'normal') > 1 ? ' · 불멸자 아이콘 ×1.5' : '');
 
   document.getElementById('resHead').innerHTML = personal
     ? '<tr><th>아이템</th><th>소원 안 함</th><th>기대 처치</th><th>소원 시</th><th>기대 처치</th></tr>'
