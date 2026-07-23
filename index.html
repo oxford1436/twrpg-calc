@@ -129,8 +129,8 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .d-body td:first-child,.d-body th:first-child{padding-left:0}
 .d-body code{font-family:'IBM Plex Mono',monospace;color:var(--teal);font-size:.78rem;background:#0c1014;padding:.05rem .35rem;border-radius:4px}
 .footer{margin-top:1.6rem;font-size:.7rem;color:var(--dim);text-align:center;line-height:1.7}
-.visitor-badges{display:flex;justify-content:center;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
-.visitor-badges img{height:20px;vertical-align:middle;border-radius:4px}
+.visitor-badges-top{display:flex;justify-content:center;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.visitor-badges-top img{height:20px;vertical-align:middle;border-radius:4px}
 @media (prefers-reduced-motion:no-preference){
   .results,.verdict{animation:fade .25s ease}
   @keyframes fade{from{opacity:.55}to{opacity:1}}
@@ -144,6 +144,10 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 </head>
 <body>
 <div class="wrap">
+<div class="visitor-badges-top">
+  <img src="https://hits.sh/oxford1436.github.io/twrpg-calc.svg?label=전체%20조회수&color=e8c874&labelColor=171d24" alt="전체 조회수">
+  <img src="https://hits.sh/oxford1436.github.io/twrpg-calc/today.svg?label=오늘%20조회수&color=40e0d0&labelColor=171d24" alt="오늘 조회수">
+</div>
 <header>
   <div class="eyebrow">TWRPG v0.76a · Raid Loot Table · <span style="color:var(--gold)">by oxford1436</span></div>
   <h1>레이드 보스 드랍률 계산기</h1>
@@ -294,10 +298,6 @@ summary:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 <div class="footer">
   드랍률은 확률입니다 — 계산기는 기대값을 알려줄 뿐, 오늘의 운은 알려주지 못합니다.<br>
   TWRPG <b>v0.76a</b> (twrpgv0.76a_JN.w3x) 기준 · 맵 스크립트 역해석 · 제작 <b>oxford1436</b>
-  <div class="visitor-badges">
-    <img src="https://hits.sh/oxford1436.github.io/twrpg-calc.svg?label=전체%20조회수&color=e8c874&labelColor=171d24" alt="전체 조회수">
-    <img src="https://hits.sh/oxford1436.github.io/twrpg-calc/today.svg?label=오늘%20조회수&color=40e0d0&labelColor=171d24" alt="오늘 조회수">
-  </div>
 </div>
 </div>
 
